@@ -26,3 +26,7 @@ MIT
 are welcome.
 
 This has only been tested on Windows 10 and Windows PowerShell 5.1.
+
+# screenshots
+![systray screenshot](systray_screenshot.png)
+
