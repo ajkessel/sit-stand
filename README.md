@@ -6,7 +6,7 @@ You can either run this as PS1 from Windows PowerShell or use the compiled EXE v
 
 # syntax
 ```
-sitstand [options below, all options are, in fact, optional]
+sit-stand.exe or powershell -file sit-stand.ps1 [options below, all options are, in fact, optional]
 -sit [###] Time to sit before being remanded to stand in minutes (default 60)
 -stand [###] Time to stand before being remanded to sit in minutes (default 60)
 -font typeface in systray
