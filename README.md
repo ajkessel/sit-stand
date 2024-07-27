@@ -5,6 +5,7 @@ A simple configurable sit-stand reminder script. My main purpose in writing this
 You can either run this as PS1 from Windows PowerShell or use the compiled EXE version.
 
 # syntax
+```
 -sit [###] Time to sit before being remanded to stand in minutes (default 60)
 -stand [###] Time to stand before being remanded to sit in minutes (default 60)
 -font typeface in systray
@@ -13,7 +14,7 @@ You can either run this as PS1 from Windows PowerShell or use the compiled EXE v
 -auto start automatically on login
 -uninstall remove all traces of  application
 -help Display  help message
-
+```
 # license
 MIT
 
