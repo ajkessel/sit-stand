@@ -9,12 +9,12 @@ You can either run this as PS1 from Windows PowerShell or use the compiled EXE v
 sit-stand.exe or powershell -file sit-stand.ps1 [options below, all options are, in fact, optional]
 -sit [###] Time to sit before being remanded to stand in minutes (default 60)
 -stand [###] Time to stand before being remanded to sit in minutes (default 60)
--font typeface in systray
--fg foreground color in systray
--bg background color in systray
+-font [font-name] typeface in systray
+-fg [color] foreground color in systray
+-bg [color] background color in systray
 -auto start automatically on login
--uninstall remove all traces of  application
--help Display  help message
+-uninstall remove all traces of application
+-help Display help message
 ```
 # tips
 You may want to set the systray icon to "always show" in your taskbar settings so you can see the sit/stand countdown.
