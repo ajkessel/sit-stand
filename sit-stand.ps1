@@ -1,3 +1,4 @@
+#Requires -Version 5.1
 <#
 .SYNOPSIS
     This script will remind you to stand up and sit down on a defined schedule, with a countdown in the systray.
