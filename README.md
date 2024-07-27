@@ -1,5 +1,5 @@
 # sit-stand
-A simple configurable sit-stand reminder script. My main purpose in writing this script was to learn more about PowerShell programming, but it has the added benefit of getting you to stand up regularly!
+A simple configurable sit-stand reminder script for Windows that runs in your systray. My main purpose in writing this script was to learn more about PowerShell programming, but it has the added benefit of getting you to stand up regularly!
 
 # execution
 You can either run this as PS1 from Windows PowerShell or use the compiled EXE version.
@@ -16,8 +16,13 @@ sit-stand.exe or powershell -file sit-stand.ps1 [options below, all options are,
 -uninstall remove all traces of  application
 -help Display  help message
 ```
+# tips
+You may want to set the systray icon to "always show" in your taskbar settings so you can see the sit/stand countdown.
+
 # license
 MIT
 
 # suggestions/bug reports
 are welcome.
+
+This has only been tested on Windows 10.
