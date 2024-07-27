@@ -82,7 +82,8 @@ $global:objNotifyIcon = New-Object System.Windows.Forms.NotifyIcon
 $global:contextMenu = [System.Windows.Forms.ContextMenuStrip]::new()
 If ($auto) {
   $global:autostart = $true
-} else {
+}
+else {
   $global:autostart = ((get-item -path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run').GetValue("Sit-Stand"))
 }
 
@@ -155,11 +156,10 @@ function SetTray {
       UpdateRegistry
     })
   
-  $fonts = @("Arial", "Calibri", "Comic Sans MS", "Courier New", "Georgia", "Impact", "Lucida Console", "Palatino", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana", "MS Sans Serif", "MS Serif")
-  foreach ($x in $fonts) {
-    $y = New-Object System.Windows.Forms.ToolStripMenuItem
-    $y.Text = $x
-    $y.Add_Click( {
+  @("Arial", "Calibri", "Comic Sans MS", "Courier New", "Georgia", "Impact", "Lucida Console", "Palatino", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana", "MS Sans Serif", "MS Serif") | ForEach {
+    $x = New-Object System.Windows.Forms.ToolStripMenuItem
+    $x.Text = $_
+    $x.Add_Click( {
         param(
           [System.Object] $selected
         )
@@ -167,32 +167,27 @@ function SetTray {
         UpdateRegistry
         UpdateIcon
       } )
-    $null = $menuItemChangeFont.DropDownItems.Add($y)
+    $null = $menuItemChangeFont.DropDownItems.Add($x)
   }
-  $colors = @([System.Enum]::GetValues('ConsoleColor'))
-  foreach ($x in $colors) {
-    $bg = New-Object System.Windows.Forms.ToolStripMenuItem
+  @([System.Enum]::GetValues('ConsoleColor')) | ForEach {
     $fg = New-Object System.Windows.Forms.ToolStripMenuItem
-    $bg.Text = $x  
-    $fg.Text = $x  
-    $bg.Add_Click( {
-        param(
-          [System.Object] $selected
-        )
-        $global:TrayColorBg = ($selected.PSObject.Copy()).text
-        UpdateRegistry
-        UpdateIcon
-      } )
+    $bg = New-Object System.Windows.Forms.ToolStripMenuItem
+    $fg.Text = $_  
+    $bg.Text = $_
     $fg.Add_Click( {
-        param(
-          [System.Object] $selected
-        )
+        param( [System.Object] $selected)
         $global:TrayColorFg = ($selected.PSObject.Copy()).text
         UpdateRegistry
         UpdateIcon
       } )
+    $bg.Add_Click( {
+        param( [System.Object] $selected)
+        $global:TrayColorBg = ($selected.PSObject.Copy()).text
+        UpdateRegistry
+        UpdateIcon
+      } )
     $null = $menuItemChangeFg.DropDownItems.Add($fg)
-    $null = $menuItemChangeBg.DropDownItems.Add($bg)
+    $null = $menuItemChangeBg.DropDownItems.Add($bg) 
   }
   $menuItemChangeSit.add_Click({
       $newTime = [int](ChangeTime "sit")
@@ -214,12 +209,9 @@ function SetTray {
         UpdateRegistry
       }
     })
-  $null = $menuItemChange.DropDownItems.Add($menuItemChangeSit)
-  $null = $menuItemChange.DropDownItems.Add($menuItemChangeStand)
-  $null = $menuItemChange.DropDownItems.Add($menuItemChangeFont)
-  $null = $menuItemChange.DropDownItems.Add($menuItemChangeFg)
-  $null = $menuItemChange.DropDownItems.Add($menuItemChangeBg)
-  $null = $menuItemChange.DropDownItems.Add($menuItemChangeAuto)
+  @($menuItemChangeSit, $menuItemChangeStand, $menuItemChangeFont, $menuItemChangeFg, $menuItemChangeBg, $menuItemChangeAuto) | ForEach {
+    $null = $menuItemChange.DropDownItems.Add($_)
+  }
   $menuItemExit = [System.Windows.Forms.ToolStripMenuItem]::new()
   $menuItemExit.Text = "Exit"
   $menuItemSit.add_Click({ 
@@ -277,18 +269,32 @@ function UpdateRegistry {
   Set-ItemProperty -Path $global:RegPath -Name 'fg' -Value $Global:TrayColorFg -Type 'string'
   Set-ItemProperty -Path $global:RegPath -Name 'bg' -Value $global:TrayColorBg -Type 'string'
   If ($global:autostart) {
-    $runTask = If ($PSCommandPath) {$PSCommandPath} else {(get-process -id $pid).path}
+    $runTask = If ($PSCommandPath) { $PSCommandPath } else { (get-process -id $pid).path }
     Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name "Sit-Stand" -Value $runTask
   }
   elseif ((Get-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run').GetValue("Sit-Stand")) {
     Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name "Sit-Stand"
   }
 }
+# GetIcon 
 Function GetIcon {
   param (
     [Parameter(Mandatory = $true)][int]$number,
     [Parameter(Mandatory = $false)][bool]$reverse = $false
   )
+  <#
+        .SYNOPSIS
+        Creates a graphical icon based on a number for use in the systray.
+
+        .PARAMETER Number
+        Number to convert to an image.
+
+        .PARAMETER Reverse
+        Invert colors (Boolean, optional)
+
+        .OUTPUTS
+        System.Drawing.Icon. An icon object that can be added to the systray.
+      #>
   $bmp = new-object System.Drawing.Bitmap 128, 128
   $font = new-object System.Drawing.Font $Global:TrayFont, ([math]::floor(128 / ([string]$number).length))
   if ($reverse) {
