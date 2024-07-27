@@ -25,4 +25,4 @@ MIT
 # suggestions/bug reports
 are welcome.
 
-This has only been tested on Windows 10.
+This has only been tested on Windows 10 and Windows PowerShell 5.1.
