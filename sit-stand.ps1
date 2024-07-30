@@ -114,7 +114,7 @@ $MainFunction = {
       else {
         $y = [System.Windows.MessageBox]::Show("Sit down.", 'Stand Reminder', 'OKCancel', 'Info')
       }
-      $global:sitting = -not $global:sit
+      $global:sitting = -not $global:sitting
     }
     if ($global:sitting) {
       $global:remaining = $global:sittime
@@ -242,6 +242,8 @@ function UpdateIcon {
   $objNotifyIcon.Icon = GetIcon $global:remaining $global:sitting
   $contextMenu.Items[0].Text = ("Sit" + (& { If ($global:sitting) { " (" + $Global:Remaining + ")" } }))
   $contextMenu.Items[1].Text = ("Stand" + (& { If (-not $global:sitting) { " (" + $Global:Remaining + ")" } }))
+  $contextMenu.Items[0].Checked = ( $global:sitting) 
+  $contextMenu.Items[1].Checked = ( -not $global:sitting) 
   foreach ($x in $contextMenu.Items[2].DropDownItems[2].DropDownItems) {
     $x.checked = ($x.text -eq $global:TrayFont)
   }
@@ -296,7 +298,7 @@ Function GetIcon {
         System.Drawing.Icon. An icon object that can be added to the systray.
       #>
   $bmp = new-object System.Drawing.Bitmap 128, 128
-  $font = new-object System.Drawing.Font $Global:TrayFont, ([math]::floor(128 / ([string]$number).length))
+  $font = new-object System.Drawing.Font $Global:TrayFont, ([math]::floor(100 / ([string]$number).length))
   if ($reverse) {
     $bg = new-object System.Drawing.SolidBrush $Global:TrayColorFg
     $fg = new-object System.Drawing.SolidBrush $Global:TrayColorBg
