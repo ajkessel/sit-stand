@@ -24,9 +24,12 @@
 Param(
   [Parameter(Mandatory = $false, HelpMessage = "Time to sit in minutes (default 60)")][int]$sit = 0,
   [Parameter(Mandatory = $false, HelpMessage = "Time to stand in minutes (default 60)")][int]$stand = 0,
+  [Parameter(Mandatory = $false, HelpMessage = "Path to sitting reminder sound file")][string]$sitsoundfile = "",
+  [Parameter(Mandatory = $false, HelpMessage = "Path to standing reminder sound file")][string]$standsoundfile = "",
   [Parameter(Mandatory = $false, HelpMessage = "Systray Font (default Calibri)")][string]$font = "",
   [Parameter(Mandatory = $false, HelpMessage = "Systray Foreground Color (default White)")][string]$fg = "",
   [Parameter(Mandatory = $false, HelpMessage = "Systray Background Color (default DarkBlue)")][string]$bg = "",
+  [Parameter(Mandatory = $false, HelpMessage = "Respect focus assist")][switch]$focus,
   [Parameter(Mandatory = $false, HelpMessage = "Start automatically on login")][switch]$auto,
   [Parameter(Mandatory = $false, HelpMessage = "Display this help message")][switch]$help,
   [Parameter(Mandatory = $false, HelpMessage = "Uninstall")][switch]$uninstall
@@ -56,16 +59,29 @@ if ( test-path $global:RegPath ) {
   if ( -not $font -and ($x = (get-item -path $global:RegPath).GetValue("font"))) {
     $font = $x
   }
+  if ( -not $focus -and ($x = (get-item -path $global:RegPath).GetValue("focus"))) {
+    $focus = if ( $x ) { $true } else { $false }
+  }
   if ( -not $fg -and ($x = (get-item -path $global:RegPath).GetValue("fg"))) {
     $fg = $x
   }
   if ( -not $bg -and ($x = (get-item -path $global:RegPath).GetValue("bg"))) {
     $bg = $x
   }
+  if ( -not $sitsoundfile -and ($x = (get-item -path $global:RegPath).GetValue("sitsound"))) {
+    $sitsoundfile = $x
+  }
+  if ( -not $standsoundfile -and ($x = (get-item -path $global:RegPath).GetValue("standsound"))) {
+    $standsoundfile = $x
+  }
 }
 if ( -not $font ) { $font = "Calibri" }
 if ( -not $fg ) { $fg = "White" }
 if ( -not $bg ) { $bg = "DarkBlue" }
+if ( -not $sitsoundfile ) { $sitsoundfile = "c:\windows\media\Windows Balloon.wav" }
+if ( -not $standsoundfile ) { $standsoundfile = "c:\windows\media\Windows Default.wav" }
+if ( -not ( test-path $sitsoundfile ) ) { $sitsoundfile = "silent" }
+if ( -not ( test-path $standsoundfile ) ) { $standsoundfile = "silent" }
 if ($sit -lt 1) { $sit = 60 }
 if ($stand -lt 1) { $stand = 60 }
 if ($sit -gt 999) { $sit = 999 }
@@ -80,6 +96,11 @@ $global:TrayColorBg = $bg
 $global:TrayColorfg = $fg
 $global:objNotifyIcon = New-Object System.Windows.Forms.NotifyIcon
 $global:contextMenu = [System.Windows.Forms.ContextMenuStrip]::new()
+$global:SitSound=New-Object System.Media.SoundPlayer
+$global:SitSound.SoundLocation=$SitSoundFile
+$global:StandSound=New-Object System.Media.SoundPlayer
+$global:StandSound.SoundLocation=$StandSoundFile
+$global:focus = $focus
 If ($auto) {
   $global:autostart = $true
 }
@@ -109,10 +130,16 @@ $MainFunction = {
     }
     if ( -not $global:done -and $global:remaining -gt -1 ) {
       if ( $global:sitting ) {
-        $y = [System.Windows.MessageBox]::Show("Stand Up!", 'Stand Reminder', 'OKCancel', 'Info')
+        if ( DisturbOk ) {
+        if ( $StandSound.Location -ne "silent" ) { $StandSound.PlaySync() }
+        $y = [Microsoft.VisualBasic.Interaction]::MsgBox('Stand Up!','OKCancel,SystemModal,Information', 'Stand Reminder')
+        }
       }
       else {
-        $y = [System.Windows.MessageBox]::Show("Sit down.", 'Stand Reminder', 'OKCancel', 'Info')
+        if ( DisturbOk ) {
+        if ( $SitSound.Location -ne "silent" ) { $SitSound.PlaySync() }
+        $y = [Microsoft.VisualBasic.Interaction]::MsgBox('Sit down.','OKCancel,SystemModal,Information', 'Stand Reminder')
+        }
       }
       $global:sitting = -not $global:sitting
     }
@@ -155,6 +182,53 @@ function SetTray {
       UpdateIcon
       UpdateRegistry
     })
+  $menuItemChangeFocus = New-Object System.Windows.Forms.ToolStripMenuItem
+  $menuItemChangeFocus.Text = "Respect focus assist"
+  $menuItemChangeFocus.Add_Click({
+      $global:focus = (-not $global:focus)
+      UpdateIcon
+      UpdateRegistry
+    })
+  $menuItemChangeSitSound = New-Object System.Windows.Forms.ToolStripMenuItem
+  $menuItemChangeSitSound.Text = "Sit reminder sound file"
+  $menuItemChangeSitSound.Add_Click({
+      $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{ InitialDirectory = [Environment]::GetFolderPath('Desktop') }
+      if ( test-path c:\windows\media ) {
+      $FileBrowser.InitialDirectory = "c:\windows\media"
+      } else {
+      $FileBrowser.InitialDirectory = "[Environment]::GetFolderPath('Desktop')"
+      }
+      $a = $FileBrowser.ShowDialog()
+      if ( $a -eq 'Cancel' ) { $global:SitSound.SoundLocation = "silent" } else {
+      if ( test-path $FileBrowser.Filename ) {
+      $global:SitSound.SoundLocation=($FileBrowser.Filename)
+      } else {
+      $global:SitSound.SoundLocation="silent"
+      }
+      }
+      UpdateIcon
+      UpdateRegistry
+      })
+  $menuItemChangeStandSound = New-Object System.Windows.Forms.ToolStripMenuItem
+  $menuItemChangeStandSound.Text = "Stand reminder sound file"
+  $menuItemChangeStandSound.Add_Click({
+      $FileBrowser = New-Object System.Windows.Forms.OpenFileDialog -Property @{ InitialDirectory = [Environment]::GetFolderPath('Desktop') }
+      if ( test-path c:\windows\media ) {
+      $FileBrowser.InitialDirectory = "c:\windows\media"
+      } else {
+      $FileBrowser.InitialDirectory = "[Environment]::GetFolderPath('Desktop')"
+      }
+      $a = $FileBrowser.ShowDialog()
+      if ( $a -eq 'Cancel' ) { $global:StandSound.SoundLocation = "silent" } else {
+      if ( test-path $FileBrowser.Filename ) {
+      $global:StandSound.SoundLocation=($FileBrowser.Filename)
+      } else {
+      $global:StandSound.SoundLocation="silent"
+      }
+      }
+      UpdateIcon
+      UpdateRegistry
+      })
   
   @("Arial", "Calibri", "Comic Sans MS", "Courier New", "Georgia", "Impact", "Lucida Console", "Palatino", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana", "MS Sans Serif", "MS Serif") | ForEach {
     $x = New-Object System.Windows.Forms.ToolStripMenuItem
@@ -209,7 +283,7 @@ function SetTray {
         UpdateRegistry
       }
     })
-  @($menuItemChangeSit, $menuItemChangeStand, $menuItemChangeFont, $menuItemChangeFg, $menuItemChangeBg, $menuItemChangeAuto) | ForEach {
+  @($menuItemChangeSit, $menuItemChangeStand, $menuItemChangeFont, $menuItemChangeFg, $menuItemChangeBg, $menuItemChangeAuto, $menuItemChangeFocus, $menuItemChangeSitSound, $menuItemChangeStandSound) | ForEach {
     $null = $menuItemChange.DropDownItems.Add($_)
   }
   $menuItemExit = [System.Windows.Forms.ToolStripMenuItem]::new()
@@ -253,7 +327,17 @@ function UpdateIcon {
   foreach ($x in $contextMenu.Items[2].DropDownItems[4].DropDownItems) {
     $x.checked = ($x.text -eq $global:TrayColorBg)
   }
-  $contextMenu.Items[2].DropDownItems[5].Checked = $global:autostart
+  $contextMenu.Items[2].DropDownItems[6].Checked = $global:focus
+  if ( $global:SitSound.SoundLocation -eq 'silent' ) {
+  $contextMenu.Items[2].DropDownItems[7].Text = "Sit sound (silent)"
+  } else {
+  $contextMenu.Items[2].DropDownItems[7].Text = ("Sit sound (" + [System.IO.Path]::GetFileNameWithoutExtension($global:SitSound.SoundLocation) + ")")
+  }
+  if ( $global:StandSound.SoundLocation -eq 'silent' ) {
+  $contextMenu.Items[2].DropDownItems[8].Text = "Stand sound (silent)"
+  } else {
+  $contextMenu.Items[2].DropDownItems[8].Text = ("Stand sound (" + [System.IO.Path]::GetFileNameWithoutExtension($global:StandSound.SoundLocation) + ")")
+  }
 }
 
 function ChangeTime {
@@ -270,6 +354,13 @@ function UpdateRegistry {
   Set-ItemProperty -Path $global:RegPath -Name 'font' -Value $global:TrayFont -Type 'string'
   Set-ItemProperty -Path $global:RegPath -Name 'fg' -Value $Global:TrayColorFg -Type 'string'
   Set-ItemProperty -Path $global:RegPath -Name 'bg' -Value $global:TrayColorBg -Type 'string'
+  Set-ItemProperty -Path $global:RegPath -Name 'sitsound' -Value $global:SitSound.SoundLocation -Type 'string'
+  Set-ItemProperty -Path $global:RegPath -Name 'standsound' -Value $global:StandSound.SoundLocation -Type 'string'
+  If ($global:focus) {
+     Set-ItemProperty -Path $global:RegPath -Name 'focus' -Value "1" -Type 'dword'
+  } else {
+     Set-ItemProperty -Path $global:RegPath -Name 'focus' -Value "0" -Type 'dword'
+  }
   If ($global:autostart) {
     $runTask = If ($PSCommandPath) { $PSCommandPath } else { (get-process -id $pid).path }
     Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name "Sit-Stand" -Value $runTask
@@ -316,6 +407,24 @@ Function GetIcon {
   $graphics.DrawString($number, $Font, $bg, $rectangle, $format)
   $graphics.Dispose()
   Return [System.Drawing.Icon]::FromHandle(([System.Drawing.Bitmap]::new($bmp).GetHIcon()))
+}
+
+# experimental setting to check "focus assist"
+function Get-QuietHoursProfile {
+    try {
+    $rawData = Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount\$$windows.data.notifications.quiethourssettings\Current' Data
+    $string = [Text.Encoding]::Unicode.GetString($rawData[0x1a..($rawData.length-1)])
+    
+    if ($string -notmatch 'Microsoft\.QuietHoursProfile\.(\w+)') { return ""}
+    return $matches[1]
+    } catch { return "" }
+}
+
+function DisturbOk {
+   $x = Get-QuietHoursProfile
+   if ( $x -match 'Only' -and $global:focus ) {
+     return $false
+   } else { return $true }
 }
 
 & $MainFunction
