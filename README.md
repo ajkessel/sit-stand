@@ -31,7 +31,7 @@ are welcome.
 This has only been tested on Windows 10 and Windows PowerShell 5.1.
 
 # screenshots
-![systray screenshot](systray_screenshot.png)
+![systray screenshot](https://github.com/user-attachments/assets/7b77a59a-3aef-42a4-967b-c5a8ac19dd9d)
 ![reminder screenshot](reminder_screenshot.png)
 
 
