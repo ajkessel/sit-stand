@@ -15,6 +15,7 @@ or
 -font [font-name] typeface in systray (default calibri)
 -fg [color] foreground color in systray (default white)
 -bg [color] background color in systray (default darkblue)
+-focus respect focus assist (no alert when focus assist enabled) (default off)
 -auto start automatically on login (default off)
 -uninstall remove all traces of application
 -help Display help message
