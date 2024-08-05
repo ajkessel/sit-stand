@@ -181,12 +181,12 @@ function SetTray {
       $global:autostart = (-not $global:autostart)
       UpdateIcon
       UpdateRegistry
-    })
+      })
   $menuItemChangeFocus = New-Object System.Windows.Forms.ToolStripMenuItem
-  $menuItemChangeFocus.Text = "Respect focus assist"
-  $menuItemChangeFocus.Add_Click({
-      $global:focus = (-not $global:focus)
-      UpdateIcon
+    $menuItemChangeFocus.Text = "Respect focus assist"
+    $menuItemChangeFocus.Add_Click({
+        $global:focus = (-not $global:focus)
+        UpdateIcon
       UpdateRegistry
     })
   $menuItemChangeSitSound = New-Object System.Windows.Forms.ToolStripMenuItem
@@ -327,6 +327,7 @@ function UpdateIcon {
   foreach ($x in $contextMenu.Items[2].DropDownItems[4].DropDownItems) {
     $x.checked = ($x.text -eq $global:TrayColorBg)
   }
+  $contextMenu.Items[2].DropDownItems[5].Checked = $global:autostart
   $contextMenu.Items[2].DropDownItems[6].Checked = $global:focus
   if ( $global:SitSound.SoundLocation -eq 'silent' ) {
   $contextMenu.Items[2].DropDownItems[7].Text = "Sit sound (silent)"
