@@ -399,7 +399,15 @@ Function GetIcon {
         System.Drawing.Icon. An icon object that can be added to the systray.
       #>
   $bmp = new-object System.Drawing.Bitmap 128, 128
-  $font = new-object System.Drawing.Font $Global:TrayFont, ([math]::floor(100 / ([string]$number).length))
+  $numberstring = [string]$number
+  $testfont = new-object System.Drawing.Font $Global:TrayFont, 128
+  $size = [System.Windows.Forms.TextRenderer]::MeasureText($numberString, $testFont)
+  if ( $size.Height > $size.Width ) {
+    $newfontsize = [math]::floor(16384/$size.Height)
+  } else {
+    $newfontsize = [math]::floor(16384/$size.Width)
+  }
+  $font = new-object System.Drawing.Font $Global:TrayFont, $newfontsize
   if ($reverse) {
     $bg = new-object System.Drawing.SolidBrush $Global:TrayColorFg
     $fg = new-object System.Drawing.SolidBrush $Global:TrayColorBg
