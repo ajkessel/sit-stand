@@ -398,14 +398,16 @@ Function GetIcon {
         .OUTPUTS
         System.Drawing.Icon. An icon object that can be added to the systray.
       #>
-  $bmp = new-object System.Drawing.Bitmap 128, 128
   $numberstring = [string]$number
+  $bmp = new-object System.Drawing.Bitmap 128, 128
+  $graphics = [System.Drawing.Graphics]::FromImage($bmp)
   $testfont = new-object System.Drawing.Font $Global:TrayFont, 128
-  $size = [System.Windows.Forms.TextRenderer]::MeasureText($numberString, $testFont)
+  $size = $graphics.MeasureString($numberString, $testfont)
   if ( $size.Height > $size.Width ) {
-    $newfontsize = [math]::floor(16384/$size.Height)
-  } else {
-    $newfontsize = [math]::floor(16384/$size.Width)
+    $newfontsize = [math]::floor(16384 / $size.Height)
+  }
+  else {
+    $newfontsize = [math]::floor(16384 / $size.Width)
   }
   $font = new-object System.Drawing.Font $Global:TrayFont, $newfontsize
   if ($reverse) {
@@ -416,7 +418,6 @@ Function GetIcon {
     $fg = new-object System.Drawing.SolidBrush $Global:TrayColorFg
     $bg = new-object System.Drawing.SolidBrush $Global:TrayColorBg
   }
-  $graphics = [System.Drawing.Graphics]::FromImage($bmp)
   $graphics.FillRectangle($fg, 0, 0, $bmp.Width, $bmp.Height)
   $Format = [System.Drawing.StringFormat]::GenericDefault
   $Format.Alignment = [System.Drawing.StringAlignment]::Center
