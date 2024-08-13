@@ -36,6 +36,12 @@ Param(
   [Parameter(Mandatory = $false, HelpMessage = "Display this help message")][switch]$help,
   [Parameter(Mandatory = $false, HelpMessage = "Uninstall")][switch]$uninstall
 )
+if ( test-path $env:TEMP ) {
+  $null = Set-Location $env:TEMP
+}
+elseif ( test-path "c:\windows\temp" ) { 
+  $null = Set-Location "c:\windows\temp"
+}
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName PresentationFramework
@@ -425,7 +431,11 @@ Function GetIcon {
   $Rectangle = [System.Drawing.RectangleF]::FromLTRB(0, 0, 128, 128)
   $graphics.DrawString($number, $Font, $bg, $rectangle, $format)
   $graphics.Dispose()
-  Return [System.Drawing.Icon]::FromHandle(([System.Drawing.Bitmap]::new($bmp).GetHIcon()))
+  #$icon = ([System.Drawing.Icon]::FromHandle(([System.Drawing.Bitmap]::new($graphics).GetHIcon())))
+  #$icon = ([System.Drawing.Icon]::FromHandle(([System.Drawing.Bitmap]::new($graphics).GetHIcon())))
+  #$icon = $bmp.GetHIcon()
+  $icon = [System.Drawing.Icon]::FromHandle(([System.Drawing.Bitmap]::new($bmp).GetHIcon()))
+  Return $icon
 }
 
 # experimental setting to check "focus assist"
